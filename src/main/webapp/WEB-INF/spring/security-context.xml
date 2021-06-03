@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:security="http://www.springframework.org/schema/security"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/security https://www.springframework.org/schema/security/spring-security.xsd">
+
+    <!-- 에러 페이지 : 빈으로 등록하여 사용 -->
+    <bean id="customAccessDenied" class="org.zerock.security.CustomAccessDeniedHandler"></bean>
+<!--<bean id="customLoginSuccess" class="org.zerock.security.CustomLoginSuccessHandler"></bean>-->
+<!--<bean id="customPasswordEncoder" class="org.zerock.security.CustomNoOpPasswordEncoder"></bean>-->
+    <bean id="bcryptPasswordEncoder" class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder"></bean>
+    <bean id="customUserDetailsService" class="org.zerock.security.CustomUserDetailService"></bean>
+
+    <security:http use-expressions="true">
+        <!-- URI 접근 제한 설정 using interceptor -->
+        <security:intercept-url pattern="/sample/all" access="permitAll" />
+
+        <security:intercept-url pattern="/sample/member" access="hasRole('ROLE_MEMBER')" />
+
+        <security:intercept-url pattern="/sample/admin" access="hasRole('ROLE_ADMIN')" />
+
+        <!-- Login, post : get 방식으로 접근하는 URI -->
+<!--    <security:form-login />-->
+<!--    <security:form-login login-page="/customLogin" authentication-success-handler-ref="customLoginSuccess"/>-->
+        <security:form-login login-page="/customLogin"/>
+
+        <!-- Logout, post : URI 지정 -->
+        <security:logout logout-url="/customLogout" invalidate-session="true" delete-cookies="remember-me, JSESSION_ID"/>
+
+        <!-- 접근 제한 : uri 지정 | 직접 구현 -->
+<!--    <security:access-denied-handler error-page="/accessError"/>-->
+        <security:access-denied-handler ref="customAccessDenied"/>
+
+        <security:remember-me data-source-ref="dataSource" token-validity-seconds="604800"/> <!-- 7일 -->
+
+<!--    <security:csrf disabled="true"/>-->
+    </security:http>
+
+    <security:authentication-manager>
+        <security:authentication-provider
+            user-service-ref="customUserDetailsService">
+
+<!--        <security:jdbc-user-service data-source-ref="dataSource" /> -->
+
+            <!-- 기존 테이블을 이용하는 경우 -->
+<!--        <security:jdbc-user-service data-source-ref="dataSource"
+                      users-by-username-query="SELECT userid, userpw, enabled FROM tbl_member WHERE userid = ?"
+                    authorities-by-username-query="SELECT userid, auth FROM tbl_member_auth WHERE userid = ?"/> -->
+
+
+<!--        <security:password-encoder ref="customPasswordEncoder" />-->
+            <security:password-encoder ref="bcryptPasswordEncoder" />
+
+<!--        <security:user-service>
+                <security:user name="member" password="{noop}member" authorities="ROLE_MEMBER"/>
+
+                <security:user name="admin" password="{noop}admin" authorities="ROLE_MEMBER, ROLE_ADMIN"/>
+            </security:user-service>    -->
+        </security:authentication-provider>
+    </security:authentication-manager>
+</beans>
