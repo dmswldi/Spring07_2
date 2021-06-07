@@ -81,7 +81,7 @@
     </select>
 
     <delete id="delete">
-        DELETE tbl_board WHERE bno = #{bno} CASCADE
+        DELETE tbl_board WHERE bno = #{bno}
     </delete>
 
     <update id="update">
